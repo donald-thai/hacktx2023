@@ -11,6 +11,9 @@ const Editor = ({ generator, id }) => {
     setValue(val)
   };
 
+
+  
+
   useEffect(() => {
     console.log(value)
   }, [value])
