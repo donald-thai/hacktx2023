@@ -1,6 +1,6 @@
 import React from "react";
 import Editor from "./components/Editor";
-
+import Editor2 from "./components/Editor2";
 const page = () => {
   return (
     <div className="bg-[#1E1E1E] min-h-screen flex">
@@ -9,15 +9,9 @@ const page = () => {
       </div>
 
       <div className="flex-1 flex">
-        <div className='flex-1'>
+        <div className="flex-1">
           <Editor />
         </div>
-
-        {/* <div className='flex-1'>
-          <Editor 
-            generator={true}
-          />
-        </div> */}
       </div>
     </div>
   );
