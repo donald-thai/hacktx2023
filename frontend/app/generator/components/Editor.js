@@ -17,10 +17,27 @@ const Editor = () => {
   // Have we used a suggestion recently
   const [hasSuggestion, setHasSuggestion] = useState(true);
 
-  const makeRequest = () => {
+  const makeRequest = async () => {
     const rotated = encrypt(value);
     console.log("Send Encrypted Request with Data:", rotated);
-    console.log("Recieve Encryped Suggestion:", encrypt(suggestion));
+
+    await fetch("http://localhost:2000/complete", {
+      method: "POST",
+      // mode: "cors", // no-cors, *cors, same-origin
+      // cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+      // credentials: "same-origin", // include, *same-origin, omit
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      // redirect: "follow", // manual, *follow, error
+      // referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+      body: JSON.stringify({ code: value }),
+    })
+      .then((res) => {
+        console.log(res);
+      })
+      .catch((err) => console.log(err));
   };
 
   const encrypt = (text) => {

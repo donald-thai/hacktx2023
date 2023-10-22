@@ -1,20 +1,23 @@
 from flask import Flask, request, jsonify
 from flask_restful import Api, Resource
+from flask_cors import CORS
 import openai
-openai.api_key = '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'
+openai.api_key = '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'
 
 app = Flask(__name__)
 api = Api(app)
+CORS(app)
 
 class CodexComplete(Resource):
     def post(self):
         data = request.get_json()
+        print(data)
         incomplete_code = data.get("code")
         if not incomplete_code:
             return {"message": "Code string not provided."}, 400
         
         completed_code = self.complete_with_codex(incomplete_code)
-
+        print(completed_code)
         return jsonify({"completed_code": completed_code})
 
     
