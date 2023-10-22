@@ -11,11 +11,25 @@ import { vscodeDark } from "@uiw/codemirror-theme-vscode";
 const Editor = () => {
   const editor = useRef();
   const [edit, setEdit] = useState();
-  const [suggestion, setSuggestion] = useState("finish this line");
+  const [suggestion, setSuggestion] = useState("print(output)");
   const [value, setValue] = useState("");
 
   // Have we used a suggestion recently
   const [hasSuggestion, setHasSuggestion] = useState(true);
+
+  const makeRequest = () => {
+    const rotated = encrypt(value);
+    console.log("Send Encrypted Request with Data:", rotated);
+    console.log("Recieve Encryped Suggestion:", encrypt(suggestion));
+  };
+
+  const encrypt = (text) => {
+    let ans = "";
+    for (let i = 0; i < text.length; i++) {
+      ans += String.fromCharCode(text[i].charCodeAt(0) + 1);
+    }
+    return ans;
+  };
 
   const moveSuggestion = () => {
     const cursor = document.getElementsByClassName("cm-cursor-primary")[0];
@@ -43,6 +57,7 @@ const Editor = () => {
       timeout = setTimeout(() => {
         let cursorLoc = edit.state.selection.main.from;
         let dataUpToCursor = edit.state.doc.toString().slice(0, cursorLoc);
+        makeRequest();
         moveSuggestion();
       }, 700);
       return () => clearTimeout(timeout);
@@ -50,7 +65,7 @@ const Editor = () => {
   }, [value]);
 
   const addSuggestion = (edit) => {
-    console.log(edit.state.selection.main);
+    //console.log(edit.state.selection.main);
     let transaction = edit.state.update({
       changes: { from: edit.state.selection.main.from, insert: suggestion },
     });
@@ -100,7 +115,8 @@ const Editor = () => {
         <div ref={editor}></div>
         <div
           className="h-[19px] absolute text-slate-500 bg-slate-700 flex flex-row items-center justify-center left-[1000px]"
-          id="suggest">
+          id="suggest"
+        >
           <div>{suggestion}</div>
         </div>
       </div>
