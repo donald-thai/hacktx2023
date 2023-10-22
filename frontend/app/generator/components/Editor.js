@@ -1,14 +1,21 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
-import CodeMirror from "@uiw/react-codemirror";
+import React, { useRef, useEffect, useState } from "react";
+
+import { EditorView, basicSetup } from "codemirror";
+import { EditorState } from "@codemirror/state";
+import { keymap } from "@codemirror/view";
 import { python } from "@codemirror/lang-python";
 import { vscodeDark } from "@uiw/codemirror-theme-vscode";
 
-const Editor = ({ generator, id }) => {
-  const suggestion = "finish this line";
-  const [value, setValue] = useState("print('hello world!')");
-  const [hasSuggestion, setHasSuggestion] = useState(false);
+const Editor = () => {
+  const editor = useRef();
+  const [edit, setEdit] = useState();
+  const [suggestion, setSuggestion] = useState("finish this line");
+  const [value, setValue] = useState("");
+
+  // Have we used a suggestion recently
+  const [hasSuggestion, setHasSuggestion] = useState(true);
 
   const moveSuggestion = () => {
     const cursor = document.getElementsByClassName("cm-cursor-primary")[0];
@@ -23,31 +30,64 @@ const Editor = ({ generator, id }) => {
     suggestion.style.left = "10000px";
   };
 
-  const onChange = (val) => {
-    console.log(val);
-    setValue(val);
+  const onChange = EditorView.updateListener.of((v) => {
+    setValue(v.state.doc.toString());
     removeSuggestion();
-    //setHasSuggestion(false);
+    setHasSuggestion(false);
+  });
+
+  useEffect(() => {
+    if (!hasSuggestion) {
+      let timeout;
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        let cursorLoc = edit.state.selection.main.from;
+        let dataUpToCursor = edit.state.doc.toString().slice(0, cursorLoc);
+        moveSuggestion();
+      }, 700);
+      return () => clearTimeout(timeout);
+    }
+  }, [value]);
+
+  const addSuggestion = (edit) => {
+    console.log(edit.state.selection.main);
+    let transaction = edit.state.update({
+      changes: { from: edit.state.selection.main.from, insert: suggestion },
+    });
+
+    // At this point the view still shows the old state.
+    edit.dispatch(transaction);
+
+    setValue(transaction.state.doc.toString());
+    removeSuggestion();
+    setHasSuggestion(true);
   };
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      console.log("stopped");
-      setHasSuggestion(true);
-      moveSuggestion();
-    }, 500);
-    return () => clearTimeout(timeout);
-  }, [value]);
-
-  useEffect(() => {
-    document.addEventListener("keydown", (e) => {
-      if (e.key == "Tab") {
-        e.preventDefault();
-        setValue(value + suggestion);
-      }
-      removeSuggestion();
+    const state = EditorState.create({
+      doc: "",
+      extensions: [
+        basicSetup,
+        keymap.of([
+          {
+            key: "Tab",
+            run: (edit) => {
+              addSuggestion(edit);
+            },
+          },
+        ]),
+        python(),
+        vscodeDark,
+        onChange,
+      ],
     });
-  });
+
+    const v = new EditorView({ state, parent: editor.current });
+    setEdit(v);
+    return () => {
+      v.destroy();
+    };
+  }, []);
 
   return (
     <div className="w-full h-full flex flex-col overflow-hidden">
@@ -57,20 +97,11 @@ const Editor = ({ generator, id }) => {
         </div>
       </div>
       <div className="relative">
-        <CodeMirror
-          value={value}
-          className="h-[90vh] overflow-auto"
-          extensions={[python()]}
-          onChange={(e) => onChange(e)}
-          theme={vscodeDark}
-          editable={generator ? false : true}
-          indentWithTab={false}
-        />
+        <div ref={editor}></div>
         <div
-          className="h-[19px] absolute px-2 text-slate-500 bg-slate-700 flex flex-row items-center justify-center"
-          id="suggest"
-        >
-          <div>Suggestion: {suggestion}</div>
+          className="h-[19px] absolute text-slate-500 bg-slate-700 flex flex-row items-center justify-center left-[1000px]"
+          id="suggest">
+          <div>{suggestion}</div>
         </div>
       </div>
     </div>
