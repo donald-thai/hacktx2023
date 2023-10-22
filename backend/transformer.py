@@ -140,11 +140,11 @@ class PositionalEncoding(nn.Module):
 
 
 # This is a skeleton for train_classifier: you can implement this however you want
-def train_classifier(train):
+def train_model(train):
 
     # We are training on 2000 tokens. We will feed a maximum of 100 characters at a time.
     vocab_size = 2000
-    num_positions = 100
+    num_positions = 20
     # You'll probably want to tweak these in your experimentation
     d_model = 512
     d_internal = 2048
@@ -163,7 +163,7 @@ def train_classifier(train):
 
     train_exs_input = []
     train_exs_truth = []
-    window_size = 100
+    window_size = 20
     for i in range(0, len(train_text_indexed) - window_size, window_size):
         window = train_text_indexed[i:i+window_size]
         train_exs_input.append([indexer.token_to_id('<SEP>')] + window[:-1])
@@ -189,7 +189,3 @@ def train_classifier(train):
         print("Loss at epoch %i: %.4f" % (t, loss_this_epoch))
     model.eval()
     return model
-
-with open("backend/data.txt", "r") as f:
-    data = f.read()
-train_classifier(data)
